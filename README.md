@@ -6,7 +6,7 @@ A browser-based spoiler tool for [Lingo 2](https://store.steampowered.com/app/25
 
 # Disclaimer
 
-This complete repo (including the README.md you are reading right now) were vibe-coded using [Anthropic Claud](https://claude.ai/new) and while I tried to check everything bugs or errors may be present.
+This complete repo (including the README.md you are reading right now) were vibe-coded using [Anthropic Claude](https://claude.ai/new) and while I tried to check everything bugs or errors may be present.
 
 ---
 
