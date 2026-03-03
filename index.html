@@ -150,20 +150,10 @@ button.btn-primary:hover{opacity:0.85}
     <h2>Load panel data</h2>
     <p>Load from extracted <code>.tscn</code> game files, or from a pre-exported <code>.json</code> file.</p>
     <div class="upload-tabs">
-      <button class="upload-tab active" onclick="switchTab('tscn')">TSCN Files</button>
-      <button class="upload-tab" onclick="switchTab('json')">JSON Export</button>
+      <button class="upload-tab active" onclick="switchTab('json')">JSON Export</button>
+      <button class="upload-tab" onclick="switchTab('tscn')">TSCN Files</button>
     </div>
-    <div class="upload-panel active" id="tab-tscn">
-      <div class="drop-area" id="drop-area">
-        <input type="file" id="file-input" multiple accept=".tscn,.txt">
-        <div class="drop-icon">&#128193;</div>
-        <div class="drop-text"><strong>Drop .tscn files here</strong><br>or click to browse</div>
-      </div>
-      <div class="or-divider">&mdash; or paste raw content below &mdash;</div>
-      <textarea id="paste-input" placeholder="Paste .tscn file content here..."></textarea><br>
-      <button class="btn-primary" onclick="parsePasted()">Parse Pasted Content</button>
-    </div>
-    <div class="upload-panel" id="tab-json">
+    <div class="upload-panel active" id="tab-json">
       <div class="drop-area" id="drop-area-json">
         <input type="file" id="json-input" accept=".json">
         <div class="drop-icon">&#128196;</div>
@@ -174,6 +164,16 @@ button.btn-primary:hover{opacity:0.85}
         <input type="text" id="json-url-input" value="https://0x0054.github.io/lingo2_answer_viewer/lingo2_panels.json" style="width:100%;margin-top:6px;font-size:0.75rem;padding:8px 10px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'Space Mono',monospace;outline:none">
       </p>
       <button class="btn-primary" onclick="loadJsonUrl()">Load from URL</button>
+    </div>
+    <div class="upload-panel" id="tab-tscn">
+      <div class="drop-area" id="drop-area">
+        <input type="file" id="file-input" multiple accept=".tscn,.txt">
+        <div class="drop-icon">&#128193;</div>
+        <div class="drop-text"><strong>Drop .tscn files here</strong><br>or click to browse</div>
+      </div>
+      <div class="or-divider">&mdash; or paste raw content below &mdash;</div>
+      <textarea id="paste-input" placeholder="Paste .tscn file content here..."></textarea><br>
+      <button class="btn-primary" onclick="parsePasted()">Parse Pasted Content</button>
     </div>
     <div id="parse-error" style="color:#ff6e9c;font-size:0.8rem;margin-top:12px;display:none"></div>
   </div>
