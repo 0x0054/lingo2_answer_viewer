@@ -14,8 +14,8 @@ body::before{content:"";position:fixed;inset:0;background:repeating-linear-gradi
 header{padding:24px 32px 16px;border-bottom:1px solid var(--border);display:flex;align-items:baseline;gap:16px}
 header h1{font-family:"Syne",sans-serif;font-weight:800;font-size:1.5rem;letter-spacing:-0.02em;color:var(--accent)}
 header span{color:var(--muted);font-size:0.85rem}
-.layout{display:grid;grid-template-columns:290px 1fr;flex:1;overflow:hidden;height:calc(100vh - 67px)}
-.sidebar{border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.layout{display:grid;grid-template-columns:290px 1fr;flex:1}
+.sidebar{border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:calc(100vh - 67px);overflow-y:auto}
 .search-box{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
 .search-box input[type=text]{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:"Space Mono",monospace;font-size:0.9rem;padding:10px 12px;outline:none;transition:border-color 0.15s}
 .search-box input[type=text]:focus{border-color:var(--accent)}
@@ -38,12 +38,12 @@ header span{color:var(--muted);font-size:0.85rem}
 .sym-strip{display:flex;align-items:center;gap:1px;flex-shrink:0}
 .sym-strip span{font-family:"Lingo2",monospace;font-size:1.15em;color:var(--accent2);line-height:1}
 .sym-strip .bar-sep{font-family:"Space Mono",monospace;font-size:0.75em;color:var(--muted);padding:0 2px}
-.main{display:flex;flex-direction:column;overflow:hidden}
+.main{display:flex;flex-direction:column}
 .top-bar{padding:16px 32px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center}
 .top-bar input{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:"Space Mono",monospace;font-size:1.05rem;padding:12px 16px;outline:none;transition:border-color 0.15s}
 .top-bar input:focus{border-color:var(--accent)}
 .top-bar input::placeholder{color:var(--muted)}
-.content{flex:1;overflow-y:auto;padding:32px}
+.content{flex:1;padding:32px}
 .panel-card{background:var(--panel-bg);border:1px solid var(--border);padding:32px;max-width:660px;animation:fadeIn 0.2s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .card-label{font-size:0.72rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
@@ -137,6 +137,7 @@ button.btn-primary:hover{opacity:0.85}
     <div class="search-box">
       <input type="text" id="sidebar-search" placeholder="filter panels..." autocomplete="off">
       <label class="search-toggle"><input type="checkbox" id="search-answers"> also search answers</label>
+      <label class="search-toggle"><input type="checkbox" id="sort-alpha"> sort alphabetically</label>
     </div>
     <div class="map-list" id="map-list"></div>
   </aside>
@@ -150,8 +151,8 @@ button.btn-primary:hover{opacity:0.85}
     <h2>Load panel data</h2>
     <p>Load from extracted <code>.tscn</code> game files, or from a pre-exported <code>.json</code> file.</p>
     <div class="upload-tabs">
-      <button class="upload-tab active" onclick="switchTab('json')">JSON Export</button>
-      <button class="upload-tab" onclick="switchTab('tscn')">TSCN Files</button>
+      <button class="upload-tab active" onclick="switchTab('json')">Load Data</button>
+      <button class="upload-tab" onclick="switchTab('tscn')">From TSCN Files</button>
     </div>
     <div class="upload-panel active" id="tab-json">
       <div class="drop-area" id="drop-area-json">
@@ -160,7 +161,7 @@ button.btn-primary:hover{opacity:0.85}
         <div class="drop-text"><strong>Drop lingo2_panels.json here</strong><br>or click to browse</div>
       </div>
       <p style="font-size:0.75rem;color:var(--muted);margin-top:8px">
-        You can also load directly from a URL (e.g. GitHub Pages hosting):<br>
+        Or load from URL:<br>
         <input type="text" id="json-url-input" value="https://0x0054.github.io/lingo2_answer_viewer/lingo2_panels.json" style="width:100%;margin-top:6px;font-size:0.75rem;padding:8px 10px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'Space Mono',monospace;outline:none">
       </p>
       <button class="btn-primary" onclick="loadJsonUrl()">Load from URL</button>
@@ -190,12 +191,27 @@ const EMBED_MAP = {
   ":Mas":"\u0295",":Fem":"\u0295\u0313",":Old":"\u0297",":You":"\u0297\u0313",
   ":Ten":"\u0297\u0312",":Sou":"\u0290",":Sor":"\u0290\u0313",":Ana":"\u029e",
   ":Job":"\u029f",":Emp":"\u029f\u0313",":Sur":"\u02a1",":Srr":"\u02a1\u0313",
-  ":Cha":"\u00d8",":Eva":"\u029d",
+  ":Cha":"\u00d8",":Eva":"\u029d",":EvaBrk":"\u029d\u0313",
   ":Smi":"\u0040",":Sad":"\u0040\u0313",":Sas":"\u0040\u0312",
   ":Brk":"\u026E",
+  ":Dot":"\u0307",":DotBrk":"\u0269\u0313",
   ":Odd":"\u003f"
 };
+// Map raw tscn tokens to canonical codes
+// @ = :Smi (with bracket = :Sad, with squiggle = :Sas)
+// bracket flag on any code: look up bracketed variant in BRACKET_MAP
+const BRACKET_MAP = {
+  ":Syn":":Ant",":Add":":Rem",":Adp":":Adp",":Hom":":Hom",":Cat":":Exa",
+  ":Par":":Who",":Plu":":Sin",":Int":":Dim",":Ene":":Enr",":Swe":":Swu",
+  ":Mas":":Fem",":Old":":You",":Sou":":Sor",":Sur":":Srr",":Job":":Emp",
+  ":Eva":":EvaBrk","@":":Sad",":Dot":":DotBrk",":Brk":":Brk"
+};
+const SQUIGGLE_MAP = {
+  ":Add":":Adp",":Hom":":Rhy",":Ene":":Ent",":Old":":Ten",
+  ":Mas":":MasSquig",":Plu":":PluSquig","@":":Sas",":Brk":":BrkSquig"
+};
 const MODIFIER_INFO = {
+  "":{ name:"Empty", desc:"Type the clue word as-is" },
   ":Syn":{ name:"Sun", desc:"Synonym of the clue" },
   ":Ant":{ name:"Sun + Bracket", desc:"Antonym of the clue" },
   ":Brk":{ name:"Square Bracket (standalone)", desc:"Reverse the clue word (e.g. 'on' \u2192 'no')" },
@@ -234,25 +250,75 @@ const MODIFIER_INFO = {
   ":Job":{ name:"Stethoscope", desc:"Action performed by the clue" },
   ":Emp":{ name:"Stethoscope + Bracket", desc:"Who performs the action (clue is an action)" },
   ":Eva":{ name:"Salmon", desc:"Interpret a keyword inside the clue as a cryptic crossword instruction" },
+  ":Dot":{ name:"Dot", desc:"Duplicate the clue word \u2014 one dot means two copies, two dots means three copies, etc." },
+  ":DotBrk":{ name:"Dot + Bracket", desc:"Reverse of Dot \u2014 clue is a repeated word, answer is the single instance" },
+  ":EvaBrk":{ name:"Salmon + Bracket", desc:"Opposite of the cryptic keyword instruction \u2014 inversion rules follow the corresponding symbol" },
+  ":Squig":{ name:"Squiggle (standalone)", desc:"Squiggle modifier applied standalone" },
+  ":MasSquig":{ name:"Kerplunk + Squiggle", desc:"Gender-neutral form of the clue" },
+  ":PluSquig":{ name:"Planet + Squiggle", desc:"Literally add an s to the end of the clue word" },
+  ":BrkSquig":{ name:"Bracket + Squiggle", desc:"Combined bracket and squiggle modifier" },
   ":Odd":{ name:"?", desc:"Wildcard \u2014 could represent any symbol in any state" },
 };
 
 function parseSymbol(sym) {
   if (!sym || sym === "?") return [];
+  sym = sym.trim();
   const parts = sym.split("|");
   return parts.map(part => {
+    part = part.trim();
     const tokens = [];
-    const re = /(:[A-Za-z]+)(\.+)?/g;
-    let m;
-    while ((m = re.exec(part)) !== null) {
-      const code = m[1];
-      const dots = (m[2] || "").length;
-      const info = MODIFIER_INFO[code] || { name: code, desc: "Unknown modifier" };
-      const glyph = EMBED_MAP[code] || null;
-      tokens.push({ code, glyph, name: info.name, desc: info.desc, dots });
+    const words = part.split(/\s+/);
+    for (const word of words) {
+      if (!word) continue;
+      // Purely standalone dots/carets/tildes
+      if (/^[.\^~]+$/.test(word)) {
+        for (const ch of word) {
+          if (ch === '.') tokens.push(makeToken(':Dot', false, 0));
+          else if (ch === '^') tokens.push(makeToken(':Brk', false, 0));
+          else if (ch === '~') tokens.push(makeToken(':Squig', false, 0));
+        }
+        continue;
+      }
+      // Match :Code or @ tokens with optional ^ (bracket) and dots
+      const re = /(:[A-Za-z]+|@)([\^~])?(\.+)?/g;
+      let m, pos = 0;
+      while ((m = re.exec(word)) !== null) {
+        const before = word.slice(pos, m.index);
+        for (const ch of before) {
+          if (ch === '.') tokens.push(makeToken(':Dot', false, 0));
+          else if (ch === '^') tokens.push(makeToken(':Brk', false, 0));
+          else if (ch === '~') tokens.push(makeToken(':Squig', false, 0));
+        }
+        let code = m[1];
+        // m[2] is the modifier char (^ or ~), handled below
+        const dots = (m[3] || '').length;
+        // Resolve modifier FIRST (using raw token) then fall back to plain @ -> :Smi
+        const modChar = m[2];
+        if (modChar === '^') {
+          code = BRACKET_MAP[code] !== undefined ? BRACKET_MAP[code] : (code + 'Brk');
+        } else if (modChar === '~') {
+          code = SQUIGGLE_MAP[code] !== undefined ? SQUIGGLE_MAP[code] : (code + 'Squig');
+        } else if (code === '@') {
+          code = ':Smi';
+        }
+        tokens.push(makeToken(code, false, dots));
+        pos = m.index + m[0].length;
+      }
+      const after = word.slice(pos);
+      for (const ch of after) {
+        if (ch === '.') tokens.push(makeToken(':Dot', false, 0));
+        else if (ch === '^') tokens.push(makeToken(':Brk', false, 0));
+        else if (ch === '~') tokens.push(makeToken(':Squig', false, 0));
+      }
     }
     return tokens;
   });
+}
+
+function makeToken(code, _bracket, dots) {
+  const info = MODIFIER_INFO[code] || { name: code, desc: "Unknown modifier" };
+  const glyph = EMBED_MAP[code] || null;
+  return { code, glyph, name: info.name, desc: info.desc, dots };
 }
 
 function parseTscn(content, filename) {
@@ -326,7 +392,15 @@ function sidebarGlyphStrip(symbol) {
 function renderSidebar() {
   const q = document.getElementById("sidebar-search").value.toLowerCase().trim();
   const incAns = document.getElementById("search-answers").checked;
-  const filtered = q ? allPanels.filter(p => matchesSearch(p, q, incAns)) : allPanels;
+  const sortAlpha = document.getElementById("sort-alpha").checked;
+  let filtered = q ? allPanels.filter(p => matchesSearch(p, q, incAns)) : allPanels;
+  if (sortAlpha) {
+    filtered = [...filtered].sort((a, b) => {
+      const ca = (a.missingLine === "clue" ? a.answer : a.clue).toLowerCase();
+      const cb = (b.missingLine === "clue" ? b.answer : b.clue).toLowerCase();
+      return ca.localeCompare(cb);
+    });
+  }
   const groups = groupByMap(filtered);
   const list = document.getElementById("map-list");
   list.innerHTML = "";
@@ -430,6 +504,7 @@ function showPanel(panel) {
     + answerSection
     + '<div class="card-id">id: ' + panel.id + ' \u00b7 parent: ' + panel.parent + ' \u00b7 map: ' + panel.map + '</div>'
     + '</div>' + renderLegend();
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function showHome() {
@@ -498,9 +573,9 @@ function showSearch(q) {
 
 // Tab switching
 function switchTab(tab) {
-  document.querySelectorAll(".upload-tab").forEach((t,i) => t.classList.toggle("active", (i===0&&tab==="tscn")||(i===1&&tab==="json")));
-  document.getElementById("tab-tscn").classList.toggle("active", tab==="tscn");
+  document.querySelectorAll(".upload-tab").forEach((t,i) => t.classList.toggle("active", (i===0&&tab==="json")||(i===1&&tab==="tscn")));
   document.getElementById("tab-json").classList.toggle("active", tab==="json");
+  document.getElementById("tab-tscn").classList.toggle("active", tab==="tscn");
 }
 
 // TSCN loading
@@ -550,6 +625,7 @@ function showErr(m) { const e = document.getElementById("parse-error"); e.textCo
 document.getElementById("main-search").addEventListener("input", e => showSearch(e.target.value));
 document.getElementById("sidebar-search").addEventListener("input", () => renderSidebar());
 document.getElementById("search-answers").addEventListener("change", () => renderSidebar());
+document.getElementById("sort-alpha").addEventListener("change", () => renderSidebar());
 
 </script>
 </body>
