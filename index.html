@@ -430,7 +430,7 @@ function renderSidebar() {
 function renderModifiers(symbol) {
   const segs = parseSymbol(symbol);
   const hasMods = segs.some(s => s.length > 0);
-  if (!hasMods) return '<div style="margin-bottom:24px;font-size:0.82rem;color:var(--muted)">no modifier \u2014 type the clue word as-is</div>';
+  if (!hasMods) return '<div style="margin-bottom:24px;font-size:0.82rem;color:var(--muted)">' + (MODIFIER_INFO[""] ? MODIFIER_INFO[""].desc : "no modifier") + '</div>';
 
   let stripHtml = '<div class="glyph-strip">';
   for (let si = 0; si < segs.length; si++) {
